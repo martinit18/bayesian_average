@@ -4,7 +4,7 @@ __pycache__
 .eggs
 .ipynb_checkpoints
 dist
-bauesian_average.egg-info/
+bayesian_average.egg-info/
 build
 .idea/*
 *~
