@@ -20,7 +20,7 @@ def cwa(data, sigma):
     Conservative weighted average proposed by Sivia in 2004 (see references in README file).
     The priors of the real uncertainty value are proportional to sigma_0/sigma^2, where sigma_0 is the value provided by the user
     The bounds of the prior are [sigma_0, infinite].
-    This is a modified and normalisable version of the non-informative Jeffeys' prior proportional to 1/sigma.
+    This is a modified and normalisable version of the non-informative Jeffeys' prior.
     """
     loglike = np.sum([log((1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)]) #loglikelihood function
     ddloglike = diff(loglike, mu, 2) #second derivative
@@ -32,9 +32,9 @@ def cwa(data, sigma):
 def jwa(data, sigma):    
     """
     Jeffreys weighted average proposed by Trassinelli and Maxton in 2024 (see references in README file).
-    The priors of the real uncertainty value are non-informative Jeffeys' prior proportional to 1/sigma.
+    The priors of the real uncertainty value are non-informative Jeffeys' prior proportional to 1/sigma'.
     Because of the non-normalisability of the final probability distribution, this weighted average results 
-    correspond to the  limit case with prior bounds [sigma_0, sigma_max] with sigma_max -> infinite. 
+    correspond to the  limit case with prior bounds [sigma, sigma_max] with sigma_max -> infinite. 
     The final probability distribution is, however not a proper probability distribution.
     """
     loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
@@ -44,7 +44,9 @@ def jwa(data, sigma):
     sig_value = 1/sqrt(-ddloglike.subs(mu, av_value)).evalf() #calculate sigma        
     return av_value, sig_value
 
-def plot_average(data, sigma, plot_data = False, wa_val = False, cwa_val = False, jwa_val = True, wa_loglike = False, cwa_loglike = False, jwa_loglike = True, normalize = False):
+def plot_average(data, sigma, plot_data = False, wa_val = False, cwa_val = False, jwa_val = True, 
+                 wa_loglike = False, cwa_loglike = False, jwa_loglike = True, 
+                 legendon = True, normalize = False):
     """
     This is the main plot function of the library.
 
@@ -80,11 +82,11 @@ def plot_average(data, sigma, plot_data = False, wa_val = False, cwa_val = False
             if normalize:
                 y_plot = (y_plot - min(y_plot))
                 y_plot = y_plot / np.sum(y_plot)
-            plot(x_plot, y_plot, c = 'dodgerblue', label = "Conservative weighted average")
+            plot(x_plot, y_plot, c = 'dodgerblue', label = "Conservative final likelihood")
         if wa_val:
             wa_av, wa_sig = wa(data, sigma)
-            print("Weighted average:", wa_av, "+-", wa_sig)
-            axvline(wa_av, c = "r", label = "Weighted average")
+            print("Standard weighted average:", wa_av, "+-", wa_sig)
+            axvline(wa_av, c = "r", label = "Standard weighted average")
             axvline(wa_av - wa_sig, c='r', ls = "--")
             axvline(wa_av + wa_sig, c='r', ls = "--")
         if wa_loglike:
@@ -94,11 +96,11 @@ def plot_average(data, sigma, plot_data = False, wa_val = False, cwa_val = False
             if normalize:
                 y_plot = (y_plot - min(y_plot))
                 y_plot = y_plot / np.sum(y_plot)
-            plot(x_plot, y_plot, c = 'orange', label = "Weighted average")
+            plot(x_plot, y_plot, c = 'orange', label = "Standard likelihood")
         if jwa_val:
             jeff_av, jeff_sig = jwa(data, sigma)
             print("Jeffreys weighted average:", jeff_av, "+-", jeff_sig)
-            axvline(jeff_av, c = "g", label = "Jeffreys weighted average")
+            axvline(jeff_av, c = "g", label = "Jeffreys final likelihood")
             axvline(jeff_av - jeff_sig, c='g', ls = "--")
             axvline(jeff_av + jeff_sig, c='g', ls = "--")
         if jwa_loglike:
@@ -114,7 +116,7 @@ def plot_average(data, sigma, plot_data = False, wa_val = False, cwa_val = False
             y_dist = y_max - y_min
             y_data = np.linspace(y_min + 0.2 * y_dist, y_min + 0.8 * y_dist, len(data))
             errorbar(data, y_data, xerr = sigma, ls = "", capsize = 3, marker = ".", label = "data", c = "k")
-        legend()
+        if legendon: legend()
         if normalize:
             ylabel("normalized log-likelihood")
         else:
