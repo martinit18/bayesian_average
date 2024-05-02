@@ -46,7 +46,7 @@ def jwa(data, sigma):
 
 def plot_average(data, sigma, plot_data = False, wa_val = False, cwa_val = False, jwa_val = True, 
                  wa_loglike = False, cwa_loglike = False, jwa_loglike = True, 
-                 legendon = True, normalize = False):
+                 legendon = True, showon = False, normalize = False):
     """
     This is the main plot function of the library.
 
@@ -121,4 +121,4 @@ def plot_average(data, sigma, plot_data = False, wa_val = False, cwa_val = False
             ylabel("normalized log-likelihood")
         else:
             ylabel("log-likelihood")
-        show()
+        if showon: show()
