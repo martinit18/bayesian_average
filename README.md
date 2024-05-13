@@ -1,7 +1,7 @@
 # Bayesian average
 
 ### Version:
-0.1.7
+0.2.0
 
 ### Authors
 Martino Trassinelli\
@@ -37,36 +37,44 @@ For both priors, the weighted average and its associated uncertainty are obtaine
 In addition, the standard (inverse-variance) weighted average is also available for possible comparisons.
 
 ## How to use it
-For the calculation of the Jeffreys' weighted average (see below for other averages)
+For the calculation of the weighted average just type
 ```
 import bayesian_average as ba
-ba.jwa(data,sigma)
+ba.average(data,sigma)
 ```
 where `data` is a ntuple of data and `sigma` is the associated uncertainty of the same dimension.
+The default average mode is the one assuming a Jeffreys' prior `jeffreys`. 
+The other available are the `conservative` and the `standard`, which can be speficied by the keyword `mode`, like
+```
+ba.average(data,sigma, mode='conservative')
+```
+Details on the different method are presented below.
+
 The typical output is
 ```
 (6.6742395674538315, 9.74833292573106e-5)
 ```
-where the first number is the weighted average and the second one is the estimated final uncertainty 
+where the first number is the weighted average and the second one is the estimated final uncertainty.
+
 
 To plot the resulting probability distribution, the final weighted average and the input data (optionally)
 ```
 ba.plot_average(data,sigma,jwa_val=True,plot_data=True)
 ```
-The option `jwa_val=True` is on on as default. `plot_data=True` show the input data in addition.
+The option `jefferys_val=True` is on on as default. `plot_data=True` show the input data in addition.
 
 ## Details of the vailable weighted averages
 
-- `jwa`: **Jeffreys weighted average** (main average, RECOMENDED, see Ref.[1]).\
+- `jeffreys`: **Jeffreys weighted average** (main average, RECOMENDED, see Ref.[1]).\
     The priors of the real uncertainty value are non-informative Jeffeys' prior proportional to $1/\sigma'$.
     Because of the non-normalisability of the final probability distribution, this weighted average results 
     correspond to the  limit case with prior bounds $[\sigma, \sigma_\mathrm{max}]$ with $\sigma_\mathrm{max} \to \infty$ and where $\sigma$ is the value provided by the user.
     The final probability distribution is, however not a proper probability distribution.
-- `cwa`: **Conservative weighted average** (adapted for proper final probability distributions, see Ref.[2]).\
+- `cons`: **Conservative weighted average** (adapted for proper final probability distributions, see Ref.[2]).\
     The priors of the real uncertainty value are proportional to $\sigma/(\sigma')^2$, where $\sigma$ is the value provided by the user.
     The bounds of the prior are $[\sigma, \sigma_\mathrm{max}]$.
     This is a modified and normalisable version of the non-informative Jeffeys' prior.
-- `wa`: **Standard weighted average**\
+- `standard`: **Standard weighted average**\
     The standard inverse-variance weighted average useful for comparisons.
 
 
