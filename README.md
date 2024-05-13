@@ -79,8 +79,13 @@ The option `jefferys_val=True` is on on as default. `plot_data=True` show the in
 
 
 
-
 ## Refere articles:
 [1] M. Trassinelli and M. Maxton, *A minimalistic and general weighted average for inconsistent data*, in preparation for *Metrologia* \
 [2] D. S. Sivia and J. Skilling, *Data analysis: a Bayesian tutorial*, 2nd ed 2006, Oxford Univ. Press
+
+## Version history
+
+- 0.2: rearrangement of the average function(s)
+- 0.1.5: First version aviable in github with documentation
+- 0.0.1: First version published in pypi with conservative, jeffreys' and standard weighted averages
 
