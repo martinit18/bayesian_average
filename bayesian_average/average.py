@@ -2,7 +2,7 @@ import numpy as np
 from sympy import log, exp, diff, lambdify, sqrt, pi, erf
 from sympy.abc import mu
 from scipy.optimize import basinhopping
-from matplotlib.pyplot import errorbar, legend, ylabel, show, axvline, plot, gca
+from matplotlib.pyplot import errorbar, legend, ylabel, show, axvspan, plot, gca
 from sys import exit
 
 linestyle = {"markeredgewidth":1, "elinewidth":1, "capsize":2,"markersize":2}
@@ -108,9 +108,10 @@ def plot_average(data, sigma, plot_data = False,
         if jeffreys_val:
             jeff_av, jeff_sig = average(data, sigma, mode = 'jeffreys')
             print("Jeffreys weighted average:", jeff_av, "+-", jeff_sig)
-            axvline(jeff_av, c = "b", label = "Jeffreys weighted average")
-            axvline(jeff_av - jeff_sig, c='b', ls = "--")
-            axvline(jeff_av + jeff_sig, c='b', ls = "--")
+            axvspan(jeff_av - jeff_sig, jeff_av + jeff_sig, color = "b", alpha=0.2, label = "Jeffreys weighted average")
+            # axvline(jeff_av, c = "b", label = "Jeffreys weighted average")
+            # axvline(jeff_av - jeff_sig, c='b', ls = "--")
+            # axvline(jeff_av + jeff_sig, c='b', ls = "--")
         if jeffreys_loglike:
             loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
@@ -125,9 +126,10 @@ def plot_average(data, sigma, plot_data = False,
         if cons_val:
             cwa_av, cwa_sig = average(data, sigma, mode = 'cons')
             print("Conservative weighted average:", cwa_av, "+-", cwa_sig)
-            axvline(cwa_av, c = "g", label = "Conservative weighted average")
-            axvline(cwa_av - cwa_sig, c='g', ls = "--")
-            axvline(cwa_av + cwa_sig, c='g', ls = "--")
+            axvspan(cwa_av - cwa_sig, cwa_av + cwa_sig, color = "g", alpha=0.2, label = "Conservative weighted average")
+            # axvline(cwa_av, c = "g", label = "Conservative weighted average")
+            # axvline(cwa_av - cwa_sig, c='g', ls = "--")
+            # axvline(cwa_av + cwa_sig, c='g', ls = "--")
         if cons_loglike:
             loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
@@ -142,9 +144,10 @@ def plot_average(data, sigma, plot_data = False,
         if standard_val:
             wa_av, wa_sig = average(data, sigma, mode = 'standard')
             print("Standard weighted average:", wa_av, "+-", wa_sig)
-            axvline(wa_av, c = "r", label = "Standard weighted average")
-            axvline(wa_av - wa_sig, c='r', ls = "--")
-            axvline(wa_av + wa_sig, c='r', ls = "--")
+            axvspan(wa_av - wa_sig, wa_av + wa_sig, color = "r", alpha=0.2, label = "Standard weighted average")
+            # axvline(wa_av, c = "r", label = "Standard weighted average")
+            # axvline(wa_av - wa_sig, c='r', ls = "--")
+            # axvline(wa_av + wa_sig, c='r', ls = "--")
         if standard_loglike:
             loglike = np.sum([log(1/(s_temp * sqrt(2 * pi)) * exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
