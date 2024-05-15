@@ -5,6 +5,8 @@ from scipy.optimize import basinhopping
 from matplotlib.pyplot import errorbar, legend, ylabel, show, axvline, plot, gca
 from sys import exit
 
+linestyle = {"markeredgewidth":1, "elinewidth":1, "capsize":2,"markersize":2}
+
 ############################################################################################
 
 def average(data, sigma, mode = 'jeffreys'):
@@ -28,8 +30,10 @@ def average(data, sigma, mode = 'jeffreys'):
     The bounds of the prior are [sigma_0, infinite].
     This is a modified and normalisable version of the non-informative Jeffeys' prior.
 
-    - 'standard': Standard invariance inverse weighted average.
+    - 'standard': Standard invariance-inverse weighted average.
     Attention! In this case the scattering of the data is not included in the final uncertainty.
+
+    - 'birge': Standard invariance-inverse weighted average with uncertainty corrected by the Birge ratio.
     """
     
     # Check the data size
@@ -37,10 +41,18 @@ def average(data, sigma, mode = 'jeffreys'):
         exit('The dimension of the two input arrays are different. Please change it.')
         
     # Select the type of average
-    if mode  == 'standard':
+    if mode  == 'standard' or mode == 'birge':
         weights = 1 / np.array(sigma)**2
         av_value = np.average(data, weights = weights) #find minima of negative loglikelihood
         sig_value = 1/np.sqrt(np.sum(weights)) #calculate sigma    
+        if mode == 'birge':
+            chi2 = 0.
+            for i in range(np.size(data)):
+                chi2 = ( data[i] - av_value )**2 / sigma[i]**2 + chi2
+                #print((data[i] - av_value)/sigma[i], chi2)
+            birge_ratio = sqrt (chi2 / ( np.size(data) - 1))
+            print('Birge ratio = ', birge_ratio)
+            if birge_ratio > 1.: sig_value = sig_value * birge_ratio
     elif mode == 'jeffreys' or mode == 'cons':
         if mode == 'jeffreys':
             loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) 
@@ -51,7 +63,7 @@ def average(data, sigma, mode = 'jeffreys'):
         ddloglike = diff(loglike, mu, 2) #second derivative
         negloglike = lambdify(mu, -loglike)
         av_value = basinhopping(negloglike, np.average(data)).x[0] #find minima of negative loglikelihood
-        sig_value = 1/sqrt(-ddloglike.subs(mu, av_value)).evalf() #calculate sigma  
+        sig_value = 1/sqrt(-ddloglike.subs(mu, av_value)).evalf() #calculate sigma 
     else:
         exit('Please enter a valid average mode')
     
@@ -62,7 +74,7 @@ def average(data, sigma, mode = 'jeffreys'):
 def plot_average(data, sigma, plot_data = False, 
                  jeffreys_val = True, cons_val = False, standard_val = False, 
                  jeffreys_loglike = True, cons_loglike = False, standard_loglike = False, 
-                 legendon = True, showon = False, normalize = False):
+                 legendon = True, showon = False, linear = False, normalize = False):
     """
     This is the main plot function of the library.
 
@@ -72,12 +84,19 @@ def plot_average(data, sigma, plot_data = False,
         - 'standard': standard inverse-variance weigted average
 
     Please select the items you want to plot.
-    xxx indicates wa, jwa or cwa.
         - plot_data: plot the input data with the input errorbar
         - xxx_val: plot the weighted average and the corresponding uncertainty
         - xxx_like: plot the corresponding likelihood
 
-    To have normalised curves of likelihood put `normalize=True'
+    with 'xxx' equal one of the available weighted average type listed above.
+
+    To have normalised curves of likelihood put 'normalize = True'
+
+    To have likelihood values in linear scale, put 'linear = True'
+
+    To take out the legend, put 'legendon = False'
+
+    In case the graph does not show up, try the option 'showon = True'
 
     """
 
@@ -86,20 +105,40 @@ def plot_average(data, sigma, plot_data = False,
         exit("Please enter at least one thing that you want to plot.")
     else:
         x_plot = np.linspace(min(np.array(data) - np.array(sigma)), max(np.array(data) + np.array(sigma)),100)
-        if cons_val:
-            cwa_av, cwa_sig = average(data, sigma, mode = 'cons')
-            print("Conservative weighted average:", cwa_av, "+-", cwa_sig)
-            axvline(cwa_av, c = "b", label = "Conservative weighted average")
-            axvline(cwa_av - cwa_sig, c='b', ls = "--")
-            axvline(cwa_av + cwa_sig, c='b', ls = "--")
-        if cons_loglike:
-            loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
+        if jeffreys_val:
+            jeff_av, jeff_sig = average(data, sigma, mode = 'jeffreys')
+            print("Jeffreys weighted average:", jeff_av, "+-", jeff_sig)
+            axvline(jeff_av, c = "b", label = "Jeffreys weighted average")
+            axvline(jeff_av - jeff_sig, c='b', ls = "--")
+            axvline(jeff_av + jeff_sig, c='b', ls = "--")
+        if jeffreys_loglike:
+            loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
-            y_plot = loglike_lam(x_plot)
+            if linear:
+                y_plot = np.exp(loglike_lam(x_plot))
+            else:
+                y_plot = loglike_lam(x_plot)
             if normalize:
                 y_plot = (y_plot - min(y_plot))
                 y_plot = y_plot / np.sum(y_plot)
-            plot(x_plot, y_plot, c = 'dodgerblue', label = "Conservative final likelihood")
+            plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys final likelihood")
+        if cons_val:
+            cwa_av, cwa_sig = average(data, sigma, mode = 'cons')
+            print("Conservative weighted average:", cwa_av, "+-", cwa_sig)
+            axvline(cwa_av, c = "g", label = "Conservative weighted average")
+            axvline(cwa_av - cwa_sig, c='g', ls = "--")
+            axvline(cwa_av + cwa_sig, c='g', ls = "--")
+        if cons_loglike:
+            loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
+            loglike_lam = lambdify(mu, loglike)
+            if linear:
+                y_plot = np.exp(loglike_lam(x_plot))
+            else:
+                y_plot = loglike_lam(x_plot)
+            if normalize:
+                y_plot = (y_plot - min(y_plot))
+                y_plot = y_plot / np.sum(y_plot)
+            plot(x_plot, y_plot, c = 'lime', label = "Conservative final likelihood")
         if standard_val:
             wa_av, wa_sig = average(data, sigma, mode = 'standard')
             print("Standard weighted average:", wa_av, "+-", wa_sig)
@@ -109,33 +148,28 @@ def plot_average(data, sigma, plot_data = False,
         if standard_loglike:
             loglike = np.sum([log(1/(s_temp * sqrt(2 * pi)) * exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
-            y_plot = loglike_lam(x_plot)
+            if linear:
+                y_plot = np.exp(loglike_lam(x_plot))
+            else:
+                y_plot = loglike_lam(x_plot)
             if normalize:
                 y_plot = (y_plot - min(y_plot))
                 y_plot = y_plot / np.sum(y_plot)
             plot(x_plot, y_plot, c = 'orange', label = "Standard final likelihood")
-        if jeffreys_val:
-            jeff_av, jeff_sig = average(data, sigma, mode = 'jeffreys')
-            print("Jeffreys weighted average:", jeff_av, "+-", jeff_sig)
-            axvline(jeff_av, c = "g", label = "Jeffreys weighted average")
-            axvline(jeff_av - jeff_sig, c='g', ls = "--")
-            axvline(jeff_av + jeff_sig, c='g', ls = "--")
-        if jeffreys_loglike:
-            loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
-            loglike_lam = lambdify(mu, loglike)
-            y_plot = loglike_lam(x_plot)
-            if normalize:
-                y_plot = (y_plot - min(y_plot))
-                y_plot = y_plot / np.sum(y_plot)
-            plot(x_plot, y_plot, c = 'lime', label = "Jeffreys final likelihood")
         if plot_data:
             y_min, y_max = gca().get_ylim()
             y_dist = y_max - y_min
             y_data = np.linspace(y_min + 0.2 * y_dist, y_min + 0.8 * y_dist, len(data))
-            errorbar(data, y_data, xerr = sigma, ls = "", capsize = 3, marker = ".", label = "data", c = "k")
-        if legendon: legend()
+            errorbar(data, y_data, xerr = sigma, label = "data", c = "k", fmt='.k',ecolor='k',mec='k',ls = "",**linestyle)
+        if legendon: legend(fontsize=10)
         if normalize:
-            ylabel("normalized log-likelihood")
+            if linear:
+                ylabel("Normalized likelihood")
+            else:
+                ylabel("Normalized log-likelihood")
         else:
-            ylabel("log-likelihood")
+            if linear:
+                ylabel("Likelihood")
+            else:
+                ylabel("Log-likelihood")
         if showon: show()
