@@ -2,7 +2,7 @@ import numpy as np
 from sympy import log, exp, diff, lambdify, sqrt, pi, erf
 from sympy.abc import mu
 from scipy.optimize import basinhopping
-from matplotlib.pyplot import errorbar, legend, ylabel, show, axvspan, plot, gca
+from matplotlib.pyplot import errorbar, legend, ylabel, show, axvline, axvspan, plot, gca
 from sys import exit
 
 linestyle = {"markeredgewidth":1, "elinewidth":1, "capsize":2,"markersize":2}
@@ -73,7 +73,7 @@ def average(data, sigma, mode = 'jeffreys'):
 
 def plot_average(data, sigma, plot_data = False, 
                  jeffreys_val = True, cons_val = False, standard_val = False, 
-                 jeffreys_loglike = True, cons_loglike = False, standard_loglike = False, 
+                 jeffreys_like = True, cons_like = False, standard_like = False, 
                  legendon = True, showon = False, linear = False, normalize = False):
     """
     This is the main plot function of the library.
@@ -101,18 +101,33 @@ def plot_average(data, sigma, plot_data = False,
     """
 
     if not (plot_data or standard_val or cons_val or jeffreys_val 
-            or standard_loglike or cons_loglike or jeffreys_loglike):
+            or standard_like or cons_like or jeffreys_like):
         exit("Please enter at least one thing that you want to plot.")
     else:
-        x_plot = np.linspace(min(np.array(data) - np.array(sigma)), max(np.array(data) + np.array(sigma)),100)
+        x_plot = np.linspace(min(np.array(data) - np.array(sigma)), max(np.array(data) + np.array(sigma)),400)
+        x_step = x_plot[1] - x_plot[0]
         if jeffreys_val:
             jeff_av, jeff_sig = average(data, sigma, mode = 'jeffreys')
             print("Jeffreys weighted average:", jeff_av, "+-", jeff_sig)
-            axvspan(jeff_av - jeff_sig, jeff_av + jeff_sig, color = "b", alpha=0.2, label = "Jeffreys weighted average")
-            # axvline(jeff_av, c = "b", label = "Jeffreys weighted average")
-            # axvline(jeff_av - jeff_sig, c='b', ls = "--")
-            # axvline(jeff_av + jeff_sig, c='b', ls = "--")
-        if jeffreys_loglike:
+            axvspan(jeff_av - jeff_sig, jeff_av + jeff_sig, facecolor = "b", alpha=0.2)
+            axvline(jeff_av, c = "b", label = "Jeffreys average")
+            axvline(jeff_av - jeff_sig, c='b', ls = "--")
+            axvline(jeff_av + jeff_sig, c='b', ls = "--")
+        if cons_val:
+            cwa_av, cwa_sig = average(data, sigma, mode = 'cons')
+            print("Conservative weighted average:", cwa_av, "+-", cwa_sig)
+            axvspan(cwa_av - cwa_sig, cwa_av + cwa_sig, facecolor = "g", alpha=0.2)
+            axvline(cwa_av, c = "g", label = "Conservative average")
+            axvline(cwa_av - cwa_sig, c='g', ls = "--")
+            axvline(cwa_av + cwa_sig, c='g', ls = "--")
+        if standard_val:
+            wa_av, wa_sig = average(data, sigma, mode = 'standard')
+            print("Standard weighted average:", wa_av, "+-", wa_sig)
+            axvspan(wa_av - wa_sig, wa_av + wa_sig, facecolor = "r", alpha=0.2)
+            axvline(wa_av, c = "r", label = "Standard average")
+            axvline(wa_av - wa_sig, c='r', ls = "--")
+            axvline(wa_av + wa_sig, c='r', ls = "--")
+        if jeffreys_like:
             loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
             if linear:
@@ -121,16 +136,9 @@ def plot_average(data, sigma, plot_data = False,
                 y_plot = loglike_lam(x_plot)
             if normalize:
                 y_plot = (y_plot - min(y_plot))
-                y_plot = y_plot / np.sum(y_plot)
-            plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys final likelihood")
-        if cons_val:
-            cwa_av, cwa_sig = average(data, sigma, mode = 'cons')
-            print("Conservative weighted average:", cwa_av, "+-", cwa_sig)
-            axvspan(cwa_av - cwa_sig, cwa_av + cwa_sig, color = "g", alpha=0.2, label = "Conservative weighted average")
-            # axvline(cwa_av, c = "g", label = "Conservative weighted average")
-            # axvline(cwa_av - cwa_sig, c='g', ls = "--")
-            # axvline(cwa_av + cwa_sig, c='g', ls = "--")
-        if cons_loglike:
+                y_plot = y_plot / np.sum(y_plot) / x_step
+            plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys likelihood")
+        if cons_like:
             loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
             if linear:
@@ -139,16 +147,9 @@ def plot_average(data, sigma, plot_data = False,
                 y_plot = loglike_lam(x_plot)
             if normalize:
                 y_plot = (y_plot - min(y_plot))
-                y_plot = y_plot / np.sum(y_plot)
-            plot(x_plot, y_plot, c = 'lime', label = "Conservative final likelihood")
-        if standard_val:
-            wa_av, wa_sig = average(data, sigma, mode = 'standard')
-            print("Standard weighted average:", wa_av, "+-", wa_sig)
-            axvspan(wa_av - wa_sig, wa_av + wa_sig, color = "r", alpha=0.2, label = "Standard weighted average")
-            # axvline(wa_av, c = "r", label = "Standard weighted average")
-            # axvline(wa_av - wa_sig, c='r', ls = "--")
-            # axvline(wa_av + wa_sig, c='r', ls = "--")
-        if standard_loglike:
+                y_plot = y_plot / np.sum(y_plot) / x_step
+            plot(x_plot, y_plot, c = 'lime', label = "Conservative likelihood")
+        if standard_like:
             loglike = np.sum([log(1/(s_temp * sqrt(2 * pi)) * exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
             if linear:
@@ -157,8 +158,8 @@ def plot_average(data, sigma, plot_data = False,
                 y_plot = loglike_lam(x_plot)
             if normalize:
                 y_plot = (y_plot - min(y_plot))
-                y_plot = y_plot / np.sum(y_plot)
-            plot(x_plot, y_plot, c = 'orange', label = "Standard final likelihood")
+                y_plot = y_plot / np.sum(y_plot) / x_step
+            plot(x_plot, y_plot, c = 'brown', label = "Standard likelihood")
         if plot_data:
             y_min, y_max = gca().get_ylim()
             y_dist = y_max - y_min

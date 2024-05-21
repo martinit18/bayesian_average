@@ -70,10 +70,10 @@ The default mode present the Jeffreys' vinal weighted average value and the asso
 To select other choices of weighted averages, take out the associated data point, normalise the associated distribution and/or plot them linerarly, additional options are available, like
 
 ```
-ba.plot_average(data,sigma,jeffreys_val=True,jeffreys_loglike=True,plot_data=True,)
+ba.plot_average(data,sigma,jeffreys_val=True,jeffreys_like=True,plot_data=True,)
 ```
 The option `xxx_val=True` display the value of the final weighted average of the `xxx` method. \
-`xxx_val=True` display the value of the final likelihood distribution (in log-scale by default). \
+`xxx_like=True` display the value of the final likelihood distribution (in log-scale by default). \
 `plot_data=True` show the input data in addition.
 
 ## Details of the vailable weighted averages
