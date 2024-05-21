@@ -1,7 +1,7 @@
 # Bayesian average
 
 ### Version:
-0.2.0
+0.2.1
 
 ### Authors
 Martino Trassinelli\
