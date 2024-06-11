@@ -11,29 +11,28 @@ linestyle = {"markeredgewidth":1, "elinewidth":1, "capsize":2,"markersize":2}
 
 def average(data, sigma, mode = 'jeffreys'):
     """
-    Weighted average from the inputs
+Weighted average from the inputs
     - data, an array of values
     - sigma, the corresponding associated error bars
 
-    
-    Different type of average are available and can be select with 'mode' option.
-    The available ones are:
 
-    - 'jeffreys' (default): Jeffreys weighted average proposed by Trassinelli and Maxton in 2024 (see references in README file).
-    The priors of the real uncertainty value are non-informative Jeffeys' prior proportional to 1/sigma'.
-    Because of the non-normalisability of the final probability distribution, this weighted average results 
-    correspond to the  limit case with prior bounds [sigma, sigma_max] with sigma_max -> infinite. 
-    The final probability distribution is, however not a proper probability distribution.
-    
-    - 'cons': Conservative weighted average proposed by Sivia in 2004 (see references in README file).
-    The priors of the real uncertainty value are proportional to sigma_0/sigma^2, where sigma_0 is the value provided by the user
-    The bounds of the prior are [sigma_0, infinite].
-    This is a modified and normalisable version of the non-informative Jeffeys' prior.
+Different type of average are available and can be select with 'mode' option.
+The available ones are:
 
-    - 'standard': Standard invariance-inverse weighted average.
-    Attention! In this case the scattering of the data is not included in the final uncertainty.
+- 'jeffreys' (default): Jeffreys' weighted average proposed by Trassinelli and Maxton in 2024 (see references in README file).
+The prior of the real uncertainty value is a non-informative Jeffeys' priors proportional to 1/sigma'.
+This weighted average results correspond to the limit case with prior bounds [sigma, sigma_max] with sigma_max -> infinite.
+The final probability distribution is, however not a proper probability distribution.
 
-    - 'birge': Standard invariance-inverse weighted average with uncertainty corrected by the Birge ratio.
+- 'cons': Conservative weighted average proposed by Sivia in 2004 (see references in README file).
+The priors of the real uncertainty value are proportional to sigma_0/sigma^2, where sigma_0 is the value provided by the user
+The bounds of the prior are [sigma_0, infinite].
+This is a modified and normalisable version of the non-informative Jeffeys' prior.
+
+- 'standard': Standard invariance-inverse weighted average.
+Attention! In this case the scattering of the data is not included in the final uncertainty.
+
+- 'birge': Standard invariance-inverse weighted average with uncertainty corrected by the Birge ratio.
     """
     
     # Check the data size
@@ -79,7 +78,7 @@ def plot_average(data, sigma, plot_data = False,
     This is the main plot function of the library.
 
     Three weighted average are available:
-        - 'jeffreys': Jeffreys weighted average
+        - 'jeffreys': Jeffreys' weighted average
         - 'cons': conservative weighted average
         - 'standard': standard inverse-variance weigted average
 
@@ -108,9 +107,9 @@ def plot_average(data, sigma, plot_data = False,
         x_step = x_plot[1] - x_plot[0]
         if jeffreys_val:
             jeff_av, jeff_sig = average(data, sigma, mode = 'jeffreys')
-            print("Jeffreys weighted average:", jeff_av, "+-", jeff_sig)
+            print("Jeffreys' weighted average:", jeff_av, "+-", jeff_sig)
             axvspan(jeff_av - jeff_sig, jeff_av + jeff_sig, facecolor = "b", alpha=0.2)
-            axvline(jeff_av, c = "b", label = "Jeffreys average")
+            axvline(jeff_av, c = "b", label = "Jeffreys' average")
             axvline(jeff_av - jeff_sig, c='b', ls = "--")
             axvline(jeff_av + jeff_sig, c='b', ls = "--")
         if cons_val:
@@ -137,7 +136,7 @@ def plot_average(data, sigma, plot_data = False,
             if normalize:
                 y_plot = (y_plot - min(y_plot))
                 y_plot = y_plot / np.sum(y_plot) / x_step
-            plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys likelihood")
+            plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys' likelihood")
         if cons_like:
             loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
             loglike_lam = lambdify(mu, loglike)
@@ -164,7 +163,7 @@ def plot_average(data, sigma, plot_data = False,
             y_min, y_max = gca().get_ylim()
             y_dist = y_max - y_min
             y_data = np.linspace(y_min + 0.2 * y_dist, y_min + 0.8 * y_dist, len(data))
-            errorbar(data, y_data, xerr = sigma, label = "data", c = "k", fmt='.k',ecolor='k',mec='k',ls = "",**linestyle)
+            errorbar(data, y_data, xerr = sigma, label = "Data", c = "k", fmt='.k',ecolor='k',mec='k',ls = "",**linestyle)
         if legendon: legend(fontsize=10)
         if normalize:
             if linear:
