@@ -17,7 +17,7 @@ and the standard weighted average uncertainty corrected by the Birge
 (`birge`) ratio is proposed.
 
 References:
-[1] M. Trassinelli and M. Maxton, *A minimalistic and general weighted average for inconsistent data*, in preparation for *Metrologia* \
+[1] M. Trassinelli and M. Maxton, *A minimalistic and general weighted average for inconsistent data*, arXiv:2406.08293, submitted to *Metrologia* \
 [2] D. S. Sivia and J. Skilling, *Data analysis: a Bayesian tutorial*, 2nd ed 2006, Oxford Univ. Press\
 [3] R.T. Birge, *The Calculation of Errors by the Method of Least Squares*, Phys. Rev. **40**, 207 (1932)
 

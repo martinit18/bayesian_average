@@ -1,7 +1,7 @@
 # Bayesian average
 
 ### Version:
-0.2.1
+0.2.3
 
 ### Authors
 Martino Trassinelli\
@@ -96,7 +96,7 @@ The option `xxx_val=True` displays the value of the weighted average of the `xxx
 
 
 ## Reference articles:
-[1] M. Trassinelli and M. Maxton, *A minimalistic and general weighted average for inconsistent data*, in preparation for *Metrologia* \
+[1] M. Trassinelli and M. Maxton, *A minimalistic and general weighted average for inconsistent data*, [arXiv:2406.08293](https://arxiv.org/abs/2406.08293), submitted to *Metrologia* \
 [2] D. S. Sivia and J. Skilling, *Data analysis: a Bayesian tutorial*, 2nd ed 2006, Oxford Univ. Press\
 [3] R. T. Birge, *The Calculation of Errors by the Method of Least Squares*, Phys. Rev. **40**, 207 (1932)
 
