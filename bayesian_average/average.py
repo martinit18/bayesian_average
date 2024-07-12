@@ -99,12 +99,82 @@ def plot_average(data, sigma, plot_data = False,
 
     """
 
+    # Check problems in normalization
+    pb_norm = False
+
     if not (plot_data or standard_val or cons_val or jeffreys_val 
             or standard_like or cons_like or jeffreys_like):
         exit("Please enter at least one thing that you want to plot.")
     else:
         x_plot = np.linspace(min(np.array(data) - np.array(sigma)), max(np.array(data) + np.array(sigma)),400)
         x_step = x_plot[1] - x_plot[0]
+        #
+        # Plot of the likelihood with a check of zeros values (in the linear case)
+        if standard_like:
+            loglike = np.sum([log(1/(s_temp * sqrt(2 * pi)) * exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) for x_temp, s_temp in zip(data, sigma)])
+            loglike_lam = lambdify(mu, loglike)
+            if linear:
+                y_plot = np.exp(loglike_lam(x_plot))
+                if max(y_plot) == 0.:
+                    print('############## WARNING: Too small values in the linear plot. Log scale for the likelihood is kept ################')
+                    linear = False
+                    y_plot = loglike_lam(x_plot)
+            else:
+                y_plot = loglike_lam(x_plot)
+            if normalize:
+                if min(y_plot) == float('-inf') or pb_norm:
+                    # If logarithmic scale, have a look on the shape only with a normalization to 0 for the maximim (in log)
+                    print('############## WARNING: Too small values in the normalized log plot. Normalization to 0 applied ################')
+                    y_plot = (y_plot - max(y_plot))
+                    pb_norm = True
+                else:
+                    y_plot = (y_plot - min(y_plot))
+                    y_plot = y_plot / np.sum(y_plot) / x_step
+            plot(x_plot, y_plot, c = 'brown', label = "Standard likelihood")  
+        if cons_like:
+            loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
+            loglike_lam = lambdify(mu, loglike)
+            if linear:
+                y_plot = np.exp(loglike_lam(x_plot))
+                if max(y_plot) == 0.:
+                    print('############## WARNING: Too small values in the linear plot. Log scale for the likelihood is kept ################')
+                    linear = False
+                    y_plot = loglike_lam(x_plot)
+            else:
+                y_plot = loglike_lam(x_plot)
+            if normalize:
+                if min(y_plot) == float('-inf') or pb_norm:
+                    # If logarithmic scale, have a look on the shape only with a normalization to 0 for the maximim (in log)
+                    print('############## WARNING: Too small values in the normalized log plot. Normalization to 0 applied ################')
+                    y_plot = (y_plot - max(y_plot))
+                    pb_norm = True
+                else:
+                    y_plot = (y_plot - min(y_plot))
+                    y_plot = y_plot / np.sum(y_plot) / x_step
+            plot(x_plot, y_plot, c = 'lime', label = "Conservative likelihood")  
+        if jeffreys_like:
+            loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
+            loglike_lam = lambdify(mu, loglike)
+            if linear:
+                y_plot = np.exp(loglike_lam(x_plot))
+                if max(y_plot) == 0.:
+                    print('############## WARNING: Too small values in the linear plot. Log scale for the likelihood is kept ################')
+                    linear = False
+                    y_plot = loglike_lam(x_plot)
+            else:
+                y_plot = loglike_lam(x_plot)
+            if normalize:
+                if min(y_plot) == float('-inf') or pb_norm:
+                    # If logarithmic scale, have a look on the shape only with a normalization to 0 for the maximim (in log)
+                    print('############## WARNING: Too small values in the normalized log plot. Normalization to 0 applied ################')
+                    y_plot = (y_plot - max(y_plot))
+                    pb_norm = True
+                else:
+                    y_plot = (y_plot - min(y_plot))
+                    y_plot = y_plot / np.sum(y_plot) / x_step
+            plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys' likelihood")
+        #
+        # Plot of the uncertainty intervals
         if jeffreys_val:
             jeff_av, jeff_sig = average(data, sigma, mode = 'jeffreys')
             print("Jeffreys' weighted average:", jeff_av, "+-", jeff_sig)
@@ -126,44 +196,13 @@ def plot_average(data, sigma, plot_data = False,
             axvline(wa_av, c = "r", label = "Standard average")
             axvline(wa_av - wa_sig, c='r', ls = "--")
             axvline(wa_av + wa_sig, c='r', ls = "--")
-        if jeffreys_like:
-            loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
-            loglike_lam = lambdify(mu, loglike)
-            if linear:
-                y_plot = np.exp(loglike_lam(x_plot))
-            else:
-                y_plot = loglike_lam(x_plot)
-            if normalize:
-                y_plot = (y_plot - min(y_plot))
-                y_plot = y_plot / np.sum(y_plot) / x_step
-            plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys' likelihood")
-        if cons_like:
-            loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
-            loglike_lam = lambdify(mu, loglike)
-            if linear:
-                y_plot = np.exp(loglike_lam(x_plot))
-            else:
-                y_plot = loglike_lam(x_plot)
-            if normalize:
-                y_plot = (y_plot - min(y_plot))
-                y_plot = y_plot / np.sum(y_plot) / x_step
-            plot(x_plot, y_plot, c = 'lime', label = "Conservative likelihood")
-        if standard_like:
-            loglike = np.sum([log(1/(s_temp * sqrt(2 * pi)) * exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) for x_temp, s_temp in zip(data, sigma)])
-            loglike_lam = lambdify(mu, loglike)
-            if linear:
-                y_plot = np.exp(loglike_lam(x_plot))
-            else:
-                y_plot = loglike_lam(x_plot)
-            if normalize:
-                y_plot = (y_plot - min(y_plot))
-                y_plot = y_plot / np.sum(y_plot) / x_step
-            plot(x_plot, y_plot, c = 'brown', label = "Standard likelihood")
+        #
+        # Plot of the data
         if plot_data:
             y_min, y_max = gca().get_ylim()
             y_dist = y_max - y_min
             y_data = np.linspace(y_min + 0.2 * y_dist, y_min + 0.8 * y_dist, len(data))
-            errorbar(data, y_data, xerr = sigma, label = "Data", c = "k", fmt='.k',ecolor='k',mec='k',ls = "",**linestyle)
+            errorbar(data, y_data, xerr = sigma, label = "Data", fmt='.k',ecolor='k',mec='k',ls = "",**linestyle)
         if legendon: legend(fontsize=10)
         if normalize:
             if linear:
