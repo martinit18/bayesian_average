@@ -1,5 +1,5 @@
 import numpy as np
-from sympy import log, exp, diff, lambdify, sqrt, pi, erf
+from sympy import log, exp, diff, lambdify, sqrt, pi, erf, erfc
 from sympy.abc import mu
 from scipy.optimize import basinhopping
 from matplotlib.pyplot import errorbar, legend, ylabel, show, axvline, axvspan, plot, gca
@@ -52,12 +52,19 @@ Attention! In this case the scattering of the data is not included in the final 
             birge_ratio = sqrt (chi2 / ( np.size(data) - 1))
             print('Birge ratio = ', birge_ratio)
             if birge_ratio > 1.: sig_value = sig_value * birge_ratio
-    elif mode == 'jeffreys' or mode == 'cons':
+    elif mode == 'jeffreys' or mode == 'cons' or 'gamma':
         if mode == 'jeffreys':
             loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) 
                               for x_temp, s_temp in zip(data, sigma)])
         elif mode == 'cons':
             loglike = np.sum([log((1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) 
+                              for x_temp, s_temp in zip(data, sigma)]) #loglikelihood function
+        elif mode == 'igamma': # Inverse Gamma prior from book Linden, Dose, von Toussaint
+            loglike = np.sum([log(2*s_temp**2/((x_temp - mu)**2*2*s_temp*sqrt(2*pi))*
+                                  (1 - sqrt(pi)*sqrt(2)*s_temp/(2*abs(x_temp - mu))*
+                                   exp(2*s_temp**2/(4*(x_temp - mu)**2))*
+                                   erfc(sqrt(2)*s_temp/(2*abs(x_temp - mu)))
+                                   )) 
                               for x_temp, s_temp in zip(data, sigma)]) #loglikelihood function
         ddloglike = diff(loglike, mu, 2) #second derivative
         negloglike = lambdify(mu, -loglike)
@@ -73,6 +80,7 @@ Attention! In this case the scattering of the data is not included in the final 
 def plot_average(data, sigma, plot_data = False, 
                  jeffreys_val = True, cons_val = False, standard_val = False, 
                  jeffreys_like = True, cons_like = False, standard_like = False, 
+                 igamma_like = False,
                  legendon = True, showon = False, linear = False, normalize = False):
     """
     This is the main plot function of the library.
@@ -173,6 +181,31 @@ def plot_average(data, sigma, plot_data = False,
                     y_plot = (y_plot - min(y_plot))
                     y_plot = y_plot / np.sum(y_plot) / x_step
             plot(x_plot, y_plot, c = 'dodgerblue', label = "Jeffreys' likelihood")
+        if igamma_like:
+            loglike = np.sum([log(2*s_temp**2/((x_temp - mu)**2*2*s_temp*sqrt(2*pi))*
+                                  (1 - sqrt(pi)*sqrt(2)*s_temp/(2*abs(x_temp - mu))*
+                                   exp(2*s_temp**2/(4*(x_temp - mu)**2))*
+                                   erfc(sqrt(2)*s_temp/(2*abs(x_temp - mu))))) 
+                                   for x_temp, s_temp in zip(data, sigma)])
+            loglike_lam = lambdify(mu, loglike)
+            if linear:
+                y_plot = np.exp(loglike_lam(x_plot))
+                if max(y_plot) == 0.:
+                    print('############## WARNING: Too small values in the linear plot. Log scale for the likelihood is kept ################')
+                    linear = False
+                    y_plot = loglike_lam(x_plot)
+            else:
+                y_plot = loglike_lam(x_plot)
+            if normalize:
+                if min(y_plot) == float('-inf') or pb_norm:
+                    # If logarithmic scale, have a look on the shape only with a normalization to 0 for the maximim (in log)
+                    print('############## WARNING: Too small values in the normalized log plot. Normalization to 0 applied ################')
+                    y_plot = (y_plot - max(y_plot))
+                    pb_norm = True
+                else:
+                    y_plot = (y_plot - min(y_plot))
+                    y_plot = y_plot / np.sum(y_plot) / x_step
+            plot(x_plot, y_plot, c = 'lime', label = "Inverse gamma likelihood") 
         #
         # Plot of the uncertainty intervals
         if jeffreys_val:
