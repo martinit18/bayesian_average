@@ -1,7 +1,7 @@
 # Bayesian average
 
 ### Version:
-0.2.4
+0.3.1
 
 ### Authors
 Martino Trassinelli\
@@ -9,11 +9,14 @@ CNRS, Institute of NanoSciences of Paris\
 emails: trassinelli AT cnrs.fr, m.trassinelli AT gmail.com
 
 Marleen Maxton\
-Max Planck Institute for Nuclear Physics, Heidelberg
+DESY accelerator, Hamburg
 
 ### Homepage
 https://github.com/martinit18/bayesian_average
 
+### Reference article
+M. Trassinelli and M. Maxton, *A simple tool for weighted averaging of inconsistent data sets*, Metrologia *63*, 015009 (2026)\
+[DOI:10.1088/1681-7575/ae4237](https://doi.org/10.1088/1681-7575/ae4237), [arXiv:2406.08293](https://arxiv.org/abs/2406.08293)
 
 ### License
 Type: X11, see `LICENCE.txt`
@@ -96,7 +99,7 @@ The option `xxx_val=True` displays the value of the weighted average of the `xxx
 
 
 ## Reference articles:
-[1] M. Trassinelli and M. Maxton, *A minimalistic and general weighted average for inconsistent data*, [arXiv:2406.08293](https://arxiv.org/abs/2406.08293), submitted to *Metrologia* \
+[1] M. Trassinelli and M. Maxton, *A simple tool for weighted averaging of inconsistent data sets*, Metrologia *63*, 015009 (2026) [https://doi.org/10.1088/1681-7575/ae4237](doi:10.1088/1681-7575/ae4237), [arXiv:2406.08293](https://arxiv.org/abs/2406.08293) \
 [2] D. S. Sivia and J. Skilling, *Data analysis: a Bayesian tutorial*, 2nd ed 2006, Oxford Univ. Press\
 [3] R. T. Birge, *The Calculation of Errors by the Method of Least Squares*, Phys. Rev. **40**, 207 (1932)
 
