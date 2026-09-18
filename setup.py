@@ -1,7 +1,10 @@
 import os
 from setuptools import find_packages, setup
-from bayesian_average._version import __version__ 
-from bayesian_average.__init__ import __doc__ 
+
+
+version_namespace = {}
+with open(os.path.join(os.path.dirname(__file__), 'bayesian_average', '_version.py')) as file:
+    exec(file.read(), version_namespace)
 
 
 def read_file(filename):
@@ -11,11 +14,11 @@ def read_file(filename):
 setup(
     name='bayesian_average',
     packages=find_packages(include = ['bayesian_average']),
-    version=__version__,
-    description='__doc__',
+    version=version_namespace['__version__'],
+    description='Bayesian weighted averages for inconsistent data sets',
     long_description=read_file('README.md'),
     long_description_content_type='text/markdown',
     author='Marleen Maxton, Martino Trassinelli',
-    install_requires=[],
+    install_requires=['numpy', 'sympy', 'scipy', 'matplotlib'],
     license = 'X11'
 )

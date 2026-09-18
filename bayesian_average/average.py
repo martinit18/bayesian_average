@@ -49,26 +49,26 @@ Attention! In this case the scattering of the data is not included in the final 
             for i in range(np.size(data)):
                 chi2 = ( data[i] - av_value )**2 / sigma[i]**2 + chi2
                 #print((data[i] - av_value)/sigma[i], chi2)
-            birge_ratio = sqrt (chi2 / ( np.size(data) - 1))
+            birge_ratio = np.sqrt(chi2 / (np.size(data) - 1))
             print('Birge ratio = ', birge_ratio)
             if birge_ratio > 1.: sig_value = sig_value * birge_ratio
     elif mode == 'jeffreys' or mode == 'cons' or 'gamma':
         if mode == 'jeffreys':
             loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) 
-                              for x_temp, s_temp in zip(data, sigma)])
+                              for x_temp, s_temp in zip(map(float, data), map(float, sigma))])
         elif mode == 'cons':
             loglike = np.sum([log((1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) 
-                              for x_temp, s_temp in zip(data, sigma)]) #loglikelihood function
+                              for x_temp, s_temp in zip(map(float, data), map(float, sigma))]) #loglikelihood function
         elif mode == 'igamma': # Inverse Gamma prior from book Linden, Dose, von Toussaint
             loglike = np.sum([log(2*s_temp**2/((x_temp - mu)**2*2*s_temp*sqrt(2*pi))*
                                   (1 - sqrt(pi)*sqrt(2)*s_temp/(2*abs(x_temp - mu))*
                                    exp(2*s_temp**2/(4*(x_temp - mu)**2))*
                                    erfc(sqrt(2)*s_temp/(2*abs(x_temp - mu)))
                                    )) 
-                              for x_temp, s_temp in zip(data, sigma)]) #loglikelihood function
+                              for x_temp, s_temp in zip(map(float, data), map(float, sigma))]) #loglikelihood function
         ddloglike = diff(loglike, mu, 2) #second derivative
         negloglike = lambdify(mu, -loglike)
-        av_value = basinhopping(negloglike, np.average(data)).x[0] #find minima of negative loglikelihood
+        av_value = float(basinhopping(negloglike, np.average(data)).x[0]) #find minima of negative loglikelihood
         sig_value = 1/sqrt(-ddloglike.subs(mu, av_value)).evalf() #calculate sigma 
     else:
         exit('Please enter a valid average mode')
@@ -119,7 +119,7 @@ def plot_average(data, sigma, plot_data = False,
         #
         # Plot of the likelihood with a check of zeros values (in the linear case)
         if standard_like:
-            loglike = np.sum([log(1/(s_temp * sqrt(2 * pi)) * exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) for x_temp, s_temp in zip(data, sigma)])
+            loglike = np.sum([log(1/(s_temp * sqrt(2 * pi)) * exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) for x_temp, s_temp in zip(map(float, data), map(float, sigma))])
             loglike_lam = lambdify(mu, loglike)
             if linear:
                 y_plot = np.exp(loglike_lam(x_plot))
@@ -140,7 +140,7 @@ def plot_average(data, sigma, plot_data = False,
                     y_plot = y_plot / np.sum(y_plot) / x_step
             plot(x_plot, y_plot, c = 'brown', label = "Standard likelihood")  
         if cons_like:
-            loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(data, sigma)])
+            loglike = np.sum([log(sqrt(2 / pi) * s_temp * (1 - exp(-(x_temp - mu)**2 / (s_temp**2 * 2))) / (x_temp - mu)**2) for x_temp, s_temp in zip(map(float, data), map(float, sigma))])
             loglike_lam = lambdify(mu, loglike)
             if linear:
                 y_plot = np.exp(loglike_lam(x_plot))
@@ -161,7 +161,7 @@ def plot_average(data, sigma, plot_data = False,
                     y_plot = y_plot / np.sum(y_plot) / x_step
             plot(x_plot, y_plot, c = 'lime', label = "Conservative likelihood")  
         if jeffreys_like:
-            loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(data, sigma)])
+            loglike = np.sum([log(erf((x_temp - mu)/(sqrt(2)*s_temp)) / (x_temp-mu)) for x_temp, s_temp in zip(map(float, data), map(float, sigma))])
             loglike_lam = lambdify(mu, loglike)
             if linear:
                 y_plot = np.exp(loglike_lam(x_plot))
@@ -186,7 +186,7 @@ def plot_average(data, sigma, plot_data = False,
                                   (1 - sqrt(pi)*sqrt(2)*s_temp/(2*abs(x_temp - mu))*
                                    exp(2*s_temp**2/(4*(x_temp - mu)**2))*
                                    erfc(sqrt(2)*s_temp/(2*abs(x_temp - mu))))) 
-                                   for x_temp, s_temp in zip(data, sigma)])
+                                   for x_temp, s_temp in zip(map(float, data), map(float, sigma))])
             loglike_lam = lambdify(mu, loglike)
             if linear:
                 y_plot = np.exp(loglike_lam(x_plot))
@@ -210,6 +210,7 @@ def plot_average(data, sigma, plot_data = False,
         # Plot of the uncertainty intervals
         if jeffreys_val:
             jeff_av, jeff_sig = average(data, sigma, mode = 'jeffreys')
+            jeff_av, jeff_sig = float(jeff_av), float(jeff_sig)
             print("Jeffreys' weighted average:", jeff_av, "+-", jeff_sig)
             axvspan(jeff_av - jeff_sig, jeff_av + jeff_sig, facecolor = "b", alpha=0.2)
             axvline(jeff_av, c = "b", label = "Jeffreys' average")
@@ -217,6 +218,7 @@ def plot_average(data, sigma, plot_data = False,
             axvline(jeff_av + jeff_sig, c='b', ls = "--")
         if cons_val:
             cwa_av, cwa_sig = average(data, sigma, mode = 'cons')
+            cwa_av, cwa_sig = float(cwa_av), float(cwa_sig)
             print("Conservative weighted average:", cwa_av, "+-", cwa_sig)
             axvspan(cwa_av - cwa_sig, cwa_av + cwa_sig, facecolor = "g", alpha=0.2)
             axvline(cwa_av, c = "g", label = "Conservative average")
@@ -224,6 +226,7 @@ def plot_average(data, sigma, plot_data = False,
             axvline(cwa_av + cwa_sig, c='g', ls = "--")
         if standard_val:
             wa_av, wa_sig = average(data, sigma, mode = 'standard')
+            wa_av, wa_sig = float(wa_av), float(wa_sig)
             print("Standard weighted average:", wa_av, "+-", wa_sig)
             axvspan(wa_av - wa_sig, wa_av + wa_sig, facecolor = "r", alpha=0.2)
             axvline(wa_av, c = "r", label = "Standard average")
